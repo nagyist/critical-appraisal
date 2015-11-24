@@ -118,7 +118,9 @@ class CochraneParser(ReferenceParser):
 			links = []
 			for link in re.split(r',\s+', data):
 				if 'http' == link[:4]:
-					links.append(Link(os.path.basename(link), link))
+					name = os.path.basename(os.path.dirname(link))
+					name = name.replace('14651858.', '').replace('.pub2', '').replace('.pub3', '')
+					links.append(Link(name, link))
 				else:
 					links.append(Link(link, "http://onlinelibrary.wiley.com/doi/10.1002/14651858.{}.pub2/abstract".format(link)))
 			return links
@@ -156,7 +158,7 @@ class MyStudiesParser(ReferenceParser):
 	name = "mystudies.org"
 	def parse(self, data):
 		if data:
-			return [Link("MyStudies", "http://www.mystudies.org/#{}".format(data))]
+			return [Link("MyStudies", 'http://www.mystudies.org/#{}'.format(data))]
 		return super().parse(data)
 
 MyStudiesParser.register()
@@ -165,7 +167,7 @@ class BSPodcastParser(ReferenceParser):
 	name = "Best Science Medicine Podcasts"
 	def parse(self, data):
 		if data:
-			return [Link("Podcast {}".format(link), None) for link in re.split(r',\s*', data)]
+			return [Link("Podcast {}".format(link), 'http://www.therapeuticseducation.org/podcast/') for link in re.split(r',\s*', data)]
 		return super().parse(data)
 
 BSPodcastParser.register()
@@ -174,7 +176,7 @@ class ToolsForPracticeParser(ReferenceParser):
 	name = "Tools for Practice"
 	def parse(self, data):
 		if data:
-			return [Link("Chapter {}".format(link), None) for link in re.split(r',\s*', data)]
+			return [Link("#{}".format(link), 'https://www.acfp.ca/tools-for-practice/') for link in re.split(r',\s*', data)]
 		return super().parse(data)
 
 ToolsForPracticeParser.register()
@@ -183,7 +185,11 @@ class TILettersParser(ReferenceParser):
 	name = "TI Letters"
 	def parse(self, data):
 		if data:
-			return [Link("Chapter {}".format(link), None) for link in re.split(r',\s*', data)]
+			links = []
+			for letter in re.split(r',\s*', data):
+				link = 'http://www.ti.ubc.ca/letter{}'.format(letter) if int(letter) >= 75 else 'http://www.ti.ubc.ca/newsletter/'
+				links.append(Link("letter {}".format(letter), link))
+			return links
 		return super().parse(data)
 
 TILettersParser.register()
@@ -236,6 +242,8 @@ class Link(object):
 		self.link = link
 	
 	def html(self):
+		if self.link is None:
+			return self.text
 		return """<a href="{}" target="_blank">{}</a>""".format(self.link, self.text)
 
 
