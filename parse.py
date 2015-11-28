@@ -4,6 +4,7 @@
 import io
 import re
 import csv
+import uuid
 import os.path
 import logging
 
@@ -22,26 +23,70 @@ _body = """<doctype HTML>
 	h2 { margin: 1.5em 0 0.75em; }
 	h3 { margin: 1em 0 0.4em; }
 	p { margin: 0 0 0.5em; }
+	a { text-decoration: none; color: #28E; }
+	a:visited { color: #95C; }
+	h3 a:visited { color: #28E; }
 	table { border-collapse: collapse; }
 	tbody th { font-weight: normal; text-align: left; }
 	tbody th, tbody td { padding: 0.2em 0.5em; vertical-align: top; }
 	tbody th:first-child, tbody td:first-child { padding-left: 0; }
 	tbody th:last-child, tbody td:last-child { padding-right: 0; }
-	#container { max-width: 800px; margin: 0 auto; }
-	#content { padding: 2em 15px; }
+	#container { display: flex; max-width: 800px; margin: 0 auto; }
+	#index { flex: 1 1 auto; max-width: 15em; padding: 9em 15px 0 0; border-right: 1px solid #DDD; }
+	#content { flex: 4 1 auto; padding: 2em 15px; }
+	#index ul { list-style: none; }
+	#index ul li { margin-top: 0.6em; }
+	#index ul li a:visited { color: #28E; }
+	.topic table { display: none; }
+	.topic.show table { display: initial; }
+	@media screen and (max-width: 720px) {
+		#container { flex-wrap: wrap; }
+		#index { display: none; }
+	}
 	</style>
 </head>
 <body>
 	<div id="container">
+		<div id="index"><ul></ul></div>
 		<div id="content">
 		<h1>{{ title }}</h1>
 		{{ chapters }}
 		</div>
 	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script>
+	$(window).on('hashchange', function(evt) {
+		updateFromHash();
+	});
+	$(document).ready(function() {
+		updateFromHash();
+		buildIndex();
+		window.setTimeout(defuseHash, 2000);
+	});
+	function updateFromHash() {
+		if (window.location.hash && window.location.hash.length > 1) {
+			$(window.location.hash).addClass('show');	// ignore: $('article[data-id="' + window.location.hash.substr(1) + '"]')
+		}
+	}
+	function defuseHash() {		/// Remove all ids on topics to prevent scrolling, add JS click action to toggle
+		$('.topic').attr('id', null)
+		.find('h3 > a').each(function(i, elem) { $(elem).click(function(evt) {
+			$(this).parent().parent().toggleClass('show');
+		}) });
+	}
+	function buildIndex() {		/// Build an index of all chapter titles
+		var idx = $('#index > ul').empty();
+		$('.chapter').each(function(i, chap) {
+			var id = $(chap).attr('id');
+			var h2 = $(chap).find('h2').first();
+			idx.append('<li><a href="#' + id + '">' + h2.text() + '</a></li>');
+		});
+	}
+	</script>
 </body>
 </html>"""
 
-_chapter = """<article>
+_chapter = """<article id="{{ id }}" class="chapter">
 <h2>{{ name }}</h2>
 <section>
 {{ topics }}
@@ -49,8 +94,8 @@ _chapter = """<article>
 </article>
 """
 
-_topic = """<article>
-<h3>{{ name }}</h3>
+_topic = """<article id="{{ id }}" class="topic" data-id="{{ id }}">
+<h3><a href="#{{ id }}">{{ name }}</a></h3>
 <table><tbody>
 {{ entries }}
 </tbody></table>
@@ -210,6 +255,7 @@ TILettersParser.register()
 
 class Chapter(object):
 	def __init__(self, name):
+		self.id = as_id(name)
 		self.name = name
 		self.topics = []
 	
@@ -219,10 +265,13 @@ class Chapter(object):
 	
 	def html(self):
 		topics = [t.html() for t in self.topics]
-		return _chapter.replace('{{ name }}', self.name).replace('{{ topics }}', ''.join(topics))
+		return _chapter.replace('{{ id }}', self.id) \
+			.replace('{{ name }}', self.name) \
+			.replace('{{ topics }}', ''.join(topics))
 
 class Topic(object):
 	def __init__(self, chapter, name):
+		self.id = as_id(name, chapter.name)
 		self.chapter = chapter
 		self.name = name
 		self.entries = []
@@ -235,7 +284,9 @@ class Topic(object):
 	
 	def html(self):
 		entries = [e.html() for e in self.entries]
-		return _topic.replace('{{ name }}', self.name).replace('{{ entries }}', ''.join(entries))
+		return _topic.replace('{{ id }}', self.id) \
+			.replace('{{ name }}', self.name) \
+			.replace('{{ entries }}', ''.join(entries))
 
 class Entry(object):
 	def __init__(self, name, joiner=', '):
@@ -259,6 +310,11 @@ class Link(object):
 			return self.text
 		return """<a href="{}" target="_blank">{}</a>""".format(self.link, self.text)
 
+def as_id(text, prefix=None):
+	txt = text or uuid.uuid4()
+	if prefix is not None:
+		txt = prefix + '_' + txt
+	return re.sub(r'[^\w\d_]+', '', txt).lower()
 
 def parse_row(row, headers, chapter):
 	""" Parse one row. If `chapter` is None, regard the given row as chapter.
