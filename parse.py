@@ -7,6 +7,8 @@ import csv
 import os.path
 import logging
 
+from urllib.parse import urlparse
+
 _filename_csv = "CriticalAppraisal.csv"
 _filename_html = "CriticalAppraisal.html"
 
@@ -82,6 +84,22 @@ class ReferenceParser(object):
 				return prsr()
 		return None
 
+class TextOrLinkParser(ReferenceParser):
+	""" Accepts complete links (will be shown as domain-only) or simple text
+	(will be shown as text-only). """
+	name = "__domain"
+	def parse(self, data):
+		if data:
+			links = []
+			for link in re.split(r',\s+', data):
+				if 'http' == link[:4]:
+					urlparts = urlparse(link)
+					links.append(Link(urlparts.netloc, link))
+				else:
+					links.append(Link(link, None))
+			return links
+		return super().parse(data)
+
 class TherapeuticChoicesParser(ReferenceParser):
 	name = "Therapeutic Choices 7th edition"
 	def parse(self, data):
@@ -128,17 +146,12 @@ class CochraneParser(ReferenceParser):
 
 CochraneParser.register()
 
-class KeyStudiesParser(ReferenceParser):
+class KeyStudiesParser(TextOrLinkParser):
 	name = "Key Studies"
 KeyStudiesParser.register()
 
-class RiskToolsParser(ReferenceParser):
+class RiskToolsParser(TextOrLinkParser):
 	name = "Risk Tools"
-	def parse(self, data):
-		if data:
-			return [Link(link, None) for link in re.split(r',\s*', data)]
-		return super().parse(data)
-
 RiskToolsParser.register()
 
 class TheNNTParser(ReferenceParser):
@@ -146,7 +159,7 @@ class TheNNTParser(ReferenceParser):
 	joiner = '<br>'
 	def parse(self, data):
 		""" Accepts links "http://www.thennt.com/nnt/nicotine-replacement-therapy-for-smoking-cessation/"
-		separated by space.
+		separated by space. Will show last path component.
 		"""
 		if data:
 			return [Link(os.path.basename(os.path.dirname(link)), link) for link in re.split(r'\s+', data)]
@@ -167,7 +180,7 @@ class BSPodcastParser(ReferenceParser):
 	name = "Best Science Medicine Podcasts"
 	def parse(self, data):
 		if data:
-			return [Link("Podcast {}".format(link), 'http://www.therapeuticseducation.org/podcast/') for link in re.split(r',\s*', data)]
+			return [Link("#{}".format(link), 'http://www.therapeuticseducation.org/podcast/') for link in re.split(r',\s*', data)]
 		return super().parse(data)
 
 BSPodcastParser.register()
@@ -281,7 +294,7 @@ def read_file(filename):
 			if headers is None:
 				headers = row
 				continue
-			if '' == ''.join(row):
+			if '' == row[0]:
 				chapter = None
 			else:
 				new_chapter = parse_row(row, headers, chapter)
