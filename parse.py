@@ -32,7 +32,7 @@ _body = """<doctype HTML>
 	tbody th:first-child, tbody td:first-child { padding-left: 0; }
 	tbody th:last-child, tbody td:last-child { padding-right: 0; }
 	#container { display: flex; max-width: 800px; margin: 0 auto; }
-	#index { flex: 1 1 auto; max-width: 15em; padding: 9em 15px 0 0; border-right: 1px solid #DDD; }
+	#index { flex: 1 0 auto; max-width: 15em; padding: 9em 15px 0 0; border-right: 1px solid #DDD; }
 	#content { flex: 4 1 auto; padding: 2em 15px; }
 	#index ul { list-style: none; }
 	#index ul li { margin-top: 0.6em; }
@@ -245,8 +245,15 @@ class TILettersParser(ReferenceParser):
 		if data:
 			links = []
 			for letter in re.split(r',\s*', data):
-				link = 'http://www.ti.ubc.ca/letter{}'.format(letter) if int(letter) >= 75 else 'http://www.ti.ubc.ca/newsletter/'
-				links.append(Link("letter {}".format(letter), link))
+				try:
+					num = int(letter)
+					link = 'http://www.ti.ubc.ca/letter{}'.format(num) if int(num) >= 75 else 'http://www.ti.ubc.ca/newsletter/'
+				except Exception as e:
+					link, ltr = re.split(r'\s+', letter)
+					if '(' == ltr[0] and ')' == ltr[-1]:
+						ltr = ltr[1:-1]
+					letter = ltr
+				links.append(Link("#{}".format(letter), link))
 			return links
 		return super().parse(data)
 
