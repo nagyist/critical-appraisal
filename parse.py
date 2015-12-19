@@ -349,6 +349,7 @@ def parse_row(row, headers, chapter):
 
 def read_file(filename):
 	with io.open(filename, 'r', encoding='utf-8') as h:
+		logging.info("Reading «{}»".format(filename))
 		headers = None
 		reader = csv.reader(h)
 		chapters = []
@@ -374,7 +375,10 @@ def write_page(target, title, chapters):
 
 
 if '__main__' == __name__:
-	logging.info("Reading", _filename_csv)
-	chapters = read_file(_filename_csv)
-	write_page(_filename_html, "Learn all the things", chapters)
-	logging.info("Written to", _filename_html)
+	logging.basicConfig(level=logging.INFO)
+	try:
+		chapters = read_file(_filename_csv)
+		write_page(_filename_html, "Learn all the things", chapters)
+		logging.info("Written to «{}»".format(_filename_html))
+	except Exception as e:
+		logging.error(e)
