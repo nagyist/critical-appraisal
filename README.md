@@ -13,7 +13,7 @@ Running
 -------
 
 Must use Python 3 for reliable utf-8 recognition.
-Place `CriticalAppraisal.py` in the same directory, then run:
+Place `CriticalAppraisal.py` in the same directory, then run the following command or simply double-click `create.command`:
 
 ```bash
 python3 parse.py
