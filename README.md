@@ -7,7 +7,7 @@ CSV Export
 ----------
 
 CSV must be exported with **UTF-8** encoding.
-Name the file `CriticalAppraisal.py`.
+Name the file `CriticalAppraisal.csv`.
 
 Website Title
 -------------
@@ -19,7 +19,7 @@ Running
 -------
 
 Must use Python 3 for reliable utf-8 recognition.
-Place `CriticalAppraisal.py` in the same directory, then run the following command or simply double-click `create.command`:
+Place `CriticalAppraisal.csv` in the same directory, then run the following command or simply double-click `create.command`:
 
 ```bash
 python3 parse.py
