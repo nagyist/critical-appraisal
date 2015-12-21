@@ -9,6 +9,12 @@ CSV Export
 CSV must be exported with **UTF-8** encoding.
 Name the file `CriticalAppraisal.py`.
 
+Website Title
+-------------
+
+You can change the title of the generated website by putting a file `title.txt` containing your desired title into the main directory.
+If no such file is found the title defaults to “Evidence Synopsis Information”.
+
 Running
 -------
 

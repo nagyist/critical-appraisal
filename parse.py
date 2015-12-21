@@ -17,6 +17,7 @@ _body = """<doctype HTML>
 <html>
 <head>
 	<title>{{ title }}</title>
+	<meta charset="utf-8">
 	<style>
 	html, body { margin: 0; padding: 0; font: 14/17pt -apple-system, Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif; }
 	h1 { margin: 2em 0 1em; }
@@ -354,7 +355,7 @@ def parse_row(row, headers, chapter):
 		idx += 1
 
 
-def read_file(filename):
+def read_csv_file(filename):
 	with io.open(filename, 'r', encoding='utf-8') as h:
 		logging.info("Reading «{}»".format(filename))
 		headers = None
@@ -374,6 +375,14 @@ def read_file(filename):
 					chapters.append(chapter)
 		return chapters
 
+def read_title(filename):
+	try:
+		with io.open(filename, 'r', encoding='utf-8') as h:
+			title = h.read()
+			return title.strip()
+	except Exception as e:
+		return "Evidence Synopsis Information"
+
 def write_page(target, title, chapters):
 	chapters = [c.html() for c in chapters]
 	html = _body.replace('{{ title }}', title).replace('{{ chapters }}', ''.join(chapters))
@@ -384,8 +393,9 @@ def write_page(target, title, chapters):
 if '__main__' == __name__:
 	logging.basicConfig(level=logging.INFO)
 	try:
-		chapters = read_file(_filename_csv)
-		write_page(_filename_html, "Learn all the things", chapters)
+		title = read_title('title.txt')
+		chapters = read_csv_file(_filename_csv)
+		write_page(_filename_html, title, chapters)
 		logging.info("Written to «{}»".format(_filename_html))
 	except Exception as e:
 		logging.critical(e)
