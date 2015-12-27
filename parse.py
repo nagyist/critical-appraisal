@@ -241,23 +241,22 @@ class ToolsForPracticeParser(ReferenceParser):
 ToolsForPracticeParser.register()
 
 class TILettersParser(ReferenceParser):
+	""" Parsing links to TI letters. Need to be the full link + space + the
+	letter number (number may be in brackets).
+	"""
 	name = "TI Letters"
 	def parse(self, data):
 		if data:
 			links = []
 			for letter in re.split(r',\s*', data):
 				try:
-					num = int(letter)
-					link = 'http://www.ti.ubc.ca/letter{}'.format(num) if int(num) >= 75 else 'http://www.ti.ubc.ca/newsletter/'
-				except Exception as e:
-					try:
-						link, ltr = re.split(r'\s+', letter)
-						if '(' == ltr[0] and ')' == ltr[-1]:
-							ltr = ltr[1:-1]
-						letter = ltr
-					except Exception as ee:
-						raise Exception("The format for \"TI Letters\" is incorrect, needs to be the letter number only (letters 75 and newer), separated by comma and space, or the full link + space + the letter number (number may be in brackets)")
-				links.append(Link("#{}".format(letter), link))
+					link, ltr = re.split(r'\s+', letter)
+					if '(' == ltr[0] and ')' == ltr[-1]:
+						ltr = ltr[1:-1]
+					letter = ltr
+					links.append(Link("#{}".format(letter), link))
+				except Exception as ee:
+					raise Exception("The format for \"TI Letters\" is incorrect, needs to be the full link + space + the letter number (number may be in brackets)")
 			return links
 		return super().parse(data)
 
