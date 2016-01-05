@@ -235,7 +235,7 @@ class ToolsForPracticeParser(ReferenceParser):
 	name = "Tools for Practice"
 	def parse(self, data):
 		if data:
-			return [Link("#{}".format(link), 'https://www.acfp.ca/tools-for-practice/') for link in re.split(r',\s*', data)]
+			return [Link("#{}".format(link), 'https://www.acfp.ca/tools-for-practice/articles/') for link in re.split(r',\s*', data)]
 		return super().parse(data)
 
 ToolsForPracticeParser.register()
