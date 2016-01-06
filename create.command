@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd $(dirname $0)
+cd "$(dirname "$0")"
 
 # do we have python3?
 if [ 'XX' == 'XX'$(which python3) ]; then
